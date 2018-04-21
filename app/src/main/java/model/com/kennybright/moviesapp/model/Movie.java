@@ -1,11 +1,13 @@
 package com.kennybright.moviesapp.model;
 
-import java.io.Serializable;
-import java.util.Comparator;
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.util.Date;
 
 @SuppressWarnings("serial") //With this annotation we are going to hide compiler warnings
-public class Movie implements Serializable {
+//public class Movie implements Serializable {
+public class Movie implements Parcelable {
 
     /* original title
      movie poster image thumbnail
@@ -17,7 +19,7 @@ public class Movie implements Serializable {
     private Date release_date;
     private String poster_path;
     private double vote_average;
-    private double popuplarity;
+    private double popularity;
     private int movie_id;
 
     public Movie(String title, String overview, Date release_date , String poster_path, double popularity, double vote_avg,int movieId)
@@ -27,12 +29,36 @@ public class Movie implements Serializable {
         this.release_date = release_date;
         this.poster_path = poster_path;
         this.vote_average = vote_avg;
-        this.popuplarity = popularity;
+        this.popularity = popularity;
         this.movie_id = movieId;
 
     }
 
     public Movie() {}
+
+    private Movie(Parcel in) {
+        title = in.readString();
+        overview = in.readString();
+        poster_path = in.readString();
+        vote_average = in.readDouble();
+        popularity = in.readDouble();
+        movie_id = in.readInt();
+        long tmpDateVal = in.readLong();
+        this.release_date = tmpDateVal == -1 ? null : new Date(tmpDateVal);
+    }
+
+    public static final Creator<Movie> CREATOR = new Creator<Movie>() {
+        @Override
+        public Movie createFromParcel(Parcel in) {
+            return new Movie(in);
+        }
+
+        @Override
+        public Movie[] newArray(int size) {
+            return new Movie[size];
+        }
+    };
+
     public String getTitle() {
         return title;
     }
@@ -72,12 +98,12 @@ public class Movie implements Serializable {
     public void setVote_average(double vote_average) {
         this.vote_average = vote_average;
     }
-    public double getPopulaity() {
-        return popuplarity;
+    public double getPopularity() {
+        return popularity;
     }
 
     public void setPopuplarity(double popuplarity) {
-        this.popuplarity = popuplarity;
+        this.popularity = popuplarity;
     }
 
 
@@ -87,5 +113,21 @@ public class Movie implements Serializable {
 
     public void setMovie_id(int movie_id) {
         this.movie_id = movie_id;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(title);
+        dest.writeString(overview);
+        dest.writeString(poster_path);
+        dest.writeDouble(vote_average);
+        dest.writeDouble(popularity);
+        dest.writeInt(movie_id);
+        dest.writeLong(release_date != null? release_date.getTime() :-1 );
     }
 }

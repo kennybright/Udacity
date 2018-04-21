@@ -3,7 +3,16 @@
 
     <SwitchPreference
         android:defaultValue="false"
-        android:key="sort_switch"
-        android:summary="Sort order can be most popular, or by top rated. Default is most popular."
-        android:title="Movie Sorting Preference" />
+        android:key="choice_switch"
+        android:summary="Get popular, or by top_rated movie. Default is top_rated."
+        android:title="Movie Choice Preference" />
+    <ListPreference
+        android:defaultValue="1"
+        android:entries="@array/sort_order_preference"
+        android:entryValues="@array/sort_order_preference"
+        android:key="poster_pref_sort_order"
+        android:title="Sort Preference"
+        android:summary="Click this item to choose sort order of movie posters"/>
+
+
 </PreferenceScreen>

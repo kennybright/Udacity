@@ -3,13 +3,12 @@
 package com.kennybright.moviesapp.model;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Provider {
 
-    private  List<String> trailers;
-    private List <String> reviews;
+    private final List<String> trailers;
+    private final List <String> reviews;
 
     public Provider() {
         trailers =  new ArrayList<>();

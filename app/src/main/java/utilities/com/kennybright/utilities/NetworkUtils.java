@@ -3,20 +3,16 @@ package com.kennybright.utilities;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Objects;
 import java.util.Scanner;
-import com.kennybright.moviesapp.MainActivity;
-
 
 
 public class NetworkUtils {
@@ -25,9 +21,6 @@ public class NetworkUtils {
     public static final int STATUS_CONNECTED = 0 ;
 
     private static final String TAG = NetworkUtils.class.getSimpleName();
-
-    private static final String DYNAMIC_WEATHER_URL =
-            "https://andfun-weather.udacity.com/weather";
 
     private static final String STATIC_MOVIEDB_URL =
             "http://api.themoviedb.org/3/movie/";
@@ -42,15 +35,9 @@ public class NetworkUtils {
      */
 
 
-    //http://api.themoviedb.org/3/movie/popular?api_key=7c687905b3ae257936322d1808797e4f
-    /* The format we want our API to return */
-    private static final String format = "json";
+    private final static String key = "7c687905b3ae257936322d1808797e4f";
 
-    final static String QUERY_PARAM = "q";
-    final static String key = "7c687905b3ae257936322d1808797e4f";
-
-    final static String KEY_PARAM = "api_key";
-    final static String FILTER = "/";
+    private final static String KEY_PARAM = "api_key";
 
     /**
      * Builds the URL used to talk to the weather server using a location. This location is based
@@ -129,7 +116,7 @@ public class NetworkUtils {
 
     public static boolean isNetworkAvailable(Context context) {
         final ConnectivityManager connectivityManager = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE));
-        return connectivityManager.getActiveNetworkInfo() != null && connectivityManager.getActiveNetworkInfo().isConnected();
+        return Objects.requireNonNull(connectivityManager).getActiveNetworkInfo() != null && connectivityManager.getActiveNetworkInfo().isConnected();
     }
 
 }

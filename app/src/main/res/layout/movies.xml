@@ -4,17 +4,15 @@
     android:layout_height="wrap_content"
     >
 
-   <FrameLayout
-       android:layout_width="match_parent"
-       android:layout_height="wrap_content"
-       android:layout_gravity="center">
+
    <ImageView
         android:id="@+id/mv_poster_path"
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_margin="10dp"
         android:layout_gravity="center"
-       android:adjustViewBounds="true" />
+       android:adjustViewBounds="true"
+       android:contentDescription="@string/movie_details" />
 
-   </FrameLayout>
+
 </LinearLayout>

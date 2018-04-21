@@ -1,37 +1,29 @@
 package com.kennybright.moviesapp;
 
-import android.app.Application;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.net.Uri;
 import android.os.AsyncTask;
-import android.view.View;
 
 import java.net.URL;
 import java.util.List;
 import com.kennybright.utilities.MovieJsonUtils;
 
-class FetchMovieTrailerTask  extends AsyncTask<String,Void, String> {
+ class FetchMovieTrailerTask  extends AsyncTask<String,Void, List<String>> {
 
 
-   Context _context;
-
+   private final Context _context;
+   private final OnUpdateListener listener;
    public interface OnUpdateListener {
-       public void onUpdate(String key);
+       void onUpdate(List<String> key);
    }
 
-    OnUpdateListener listener;
+
     public FetchMovieTrailerTask (Context context, OnUpdateListener listener)
     {
         _context = context;
         this.listener = listener;
     }
     @Override
-    protected String doInBackground(String... params) {
+    protected List<String> doInBackground(String... params) {
         if (params.length == 0)
         { return null; }
 
@@ -43,8 +35,8 @@ class FetchMovieTrailerTask  extends AsyncTask<String,Void, String> {
                     .getResponseFromHttpUrl(moviesDbRequestUrl);
 
 
-            String trailerKey = MovieJsonUtils.getMovieTrailerFromJson(_context, response);
-           return  trailerKey;
+        //    String trailerKey = MovieJsonUtils.getMovieTrailerFromJson(_context, response);
+            return MovieJsonUtils.getMovieTrailerFromJson(_context,response);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -52,12 +44,12 @@ class FetchMovieTrailerTask  extends AsyncTask<String,Void, String> {
     }
 
     @Override
-    protected void onPostExecute(String key) {
+    protected void onPostExecute(List<String> keys) {
        // super.onPostExecute(s);
-       String   movieTrailerKey = key;
+       //String   movieTrailerKey = key;
        if (listener != null )
        {
-           listener.onUpdate(movieTrailerKey);
+           listener.onUpdate(keys);
        }
 
 

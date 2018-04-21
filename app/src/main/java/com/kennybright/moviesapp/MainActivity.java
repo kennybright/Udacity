@@ -12,7 +12,6 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
@@ -23,32 +22,30 @@ import android.widget.Toast;
 import com.kennybright.utilities.NetworkUtils;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
+
 import com.kennybright.moviesapp.model.Movie;
 import com.kennybright.utilities.MovieJsonUtils;
 import com.kennybright.moviesapp.MoviePosterAdapter.MovieAdapterOnClickHandler;
 
-import static android.webkit.ConsoleMessage.MessageLevel.LOG;
-
 public class MainActivity extends AppCompatActivity implements MovieAdapterOnClickHandler{
 
 
-    private float mMostPopular = 0;
-    private int mTopRated;
-    private static final String TOPRATED_KEY= "top rated";
-    private static final String MOSTPOPULAR_KEY ="most popular";
-
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    private RecyclerView mRecyclerView;
     private MoviePosterAdapter mMoviePosterAdapter;
 
     private SharedPreferences sPreferences;
 
-    private String sharedPrefFile = "com.kennybright.android.movieappssharedprefs";
-    private boolean sort;
+    private String sort;
+    private boolean choice;
+    private String category;
     private SharedPreferences.OnSharedPreferenceChangeListener preferenceListener;
 
+    private final List<Movie> favoriteMovies = new ArrayList<>();
+    private static final int MOVIE_DETAIL_VIEW = 999;
+    //private String MOVIE_DATA = "top_rated";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,23 +54,13 @@ public class MainActivity extends AppCompatActivity implements MovieAdapterOnCli
 
 
 
+        registerSharedPreference();
         readSharedPreference();
 
 
-        // get reclyerView
-       /* mRecyclerView = (RecyclerView) findViewById(R.id.recyclerview_movies);
-        // create layout manager and set recycler view's layout manager
-       // LinearLayoutManager layoutManager = new LinearLayoutManager( this, LinearLayoutManager.VERTICAL, false);
-       // LinearLayoutManager layoutManager = new LinearLayoutManager( this, LinearLayoutManager.VERTICAL, false);
-       // mRecyclerView.setLayoutManager(layoutManager);
-        // child layout views are fixed
-       // mRecyclerView.setHasFixedSize(true);*/
+        RecyclerView mRecyclerView = findViewById(R.id.recyclerview_movies);
 
-
-
-        RecyclerView mRecyclerView = (RecyclerView)findViewById(R.id.recyclerview_movies);
-
-        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(this,3);
+        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(this,4);
         mRecyclerView.setLayoutManager(layoutManager);
 
         mRecyclerView.setHasFixedSize(true);
@@ -82,36 +69,72 @@ public class MainActivity extends AppCompatActivity implements MovieAdapterOnCli
         // attach adapter to recyclerView
         mRecyclerView.setAdapter(mMoviePosterAdapter);
 
-      // loadMoviesData();
-        // checkConnection();
+        checkConnection();
+        loadMoviesData(category);
+
 
 
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+        SharedPreferences.Editor editor = sPreferences.edit();
+        editor.putBoolean("choice_switch", choice);
+
+        editor.apply();
+        editor.commit();
+       sPreferences.unregisterOnSharedPreferenceChangeListener(preferenceListener);
+       sPreferences = null;
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
-       // SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-    //    sPreferences.registerOnSharedPreferenceChangeListener(preferenceListener);
-        SharedPreferences.Editor editor = sPreferences.edit();
-        editor.putBoolean("sort_switch", sort);
-        editor.apply();
+
+
+        readSharedPreference();
+        loadMoviesData(category);
+
     }
 
-    protected boolean isOnline() {
-        ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo netInfo = cm.getActiveNetworkInfo();
-        if (netInfo != null && netInfo.isConnectedOrConnecting()) {
-            return true;
-        } else {
-            return false;
+    private void readSharedPreference() {
+        if (sPreferences == null)
+        {
+          registerSharedPreference();
         }
-    }
-    public void checkConnection(){
-        if(isOnline()){
 
-            //  Toast.makeText(MainActivity.this, "You are connected to Internet", Toast.LENGTH_SHORT).show();
-        }else{
+        choice =  sPreferences.getBoolean("choice_switch", false);
+        category = choice ? "popular": "top_rated";
+        sort = sPreferences.getString("poster_pref_sort_order","most popular");
+    }
+
+    private boolean isOnline() {
+
+
+        boolean connected = false;
+        try {
+            NetworkInfo wifiInfo, mobileInfo;
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo networkInfo = cm.getActiveNetworkInfo();
+            connected = networkInfo != null && networkInfo.isAvailable() &&
+                    networkInfo.isConnected();
+            return connected;
+        }catch (Exception e)
+        {
+            System.out.println("CheckConnectivity Exception: " + e.getMessage());
+            Log.v("connectivity", e.toString());
+        }
+        return connected;
+    }
+
+
+
+    public void checkConnection(){
+        if(!isOnline()){
+
+          //    Toast.makeText(MainActivity.this, "You are connected to Internet", Toast.LENGTH_SHORT).show();
+        //}else{
             Toast.makeText(MainActivity.this, "You are not connected to Internet", Toast.LENGTH_SHORT).show();
         }
     }
@@ -127,11 +150,13 @@ public class MainActivity extends AppCompatActivity implements MovieAdapterOnCli
     @Override
     protected void onResumeFragments() {
         super.onResumeFragments();
+
+
     }
 
-    private void readSharedPreference()
+    private void registerSharedPreference()
     {
-        // get sharedPrerences
+        // get default manager
         sPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         preferenceListener =  new SharedPreferences.OnSharedPreferenceChangeListener() {
 
@@ -139,16 +164,22 @@ public class MainActivity extends AppCompatActivity implements MovieAdapterOnCli
              public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
                   Log.v(TAG, "Settings key changed:" + key);
 
-                  if (key.equals("sort_switch"))
+                  if (key.equals("choice_switch"))
                   {
-                      sort = sPreferences.getBoolean("sort_switch", false);
-                      loadMoviesData();
+                      choice = sPreferences.getBoolean("choice_switch", false);
+
                   }
+
+                 if (key.equals("poster_pref_sort_order"))
+                 {
+                     sort = sPreferences.getString("poster_pref_sort_order", "most popular");
+                     mMoviePosterAdapter.sortMoviePosters(sort);
+                 }
 
              }
          };
         sPreferences.registerOnSharedPreferenceChangeListener(preferenceListener);
-      //  sort = prefs.getBoolean("sort_switch", false);
+
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -175,13 +206,25 @@ public class MainActivity extends AppCompatActivity implements MovieAdapterOnCli
         return true;
     }
 
-    private void loadMoviesData() {
-       String data = sort ? "popular": "top_rated";
-       // String data = "top_rated";
-      //  if (mMoviePosterAdapter._movies != null)
-      //      mMoviePosterAdapter.ClearMovieList();
-        // String location = SunshinePreferences.getPreferredWeatherLocation(this);
-        new FetchMovieTask().execute(data);
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        //super.onActivityResult(requestCode, resultCode, data);
+        Movie movie;
+        if (requestCode == MOVIE_DETAIL_VIEW) {
+            if (resultCode == RESULT_OK) {
+              movie = data.getParcelableExtra("favorite_movies");
+              favoriteMovies.add(movie);
+                Toast toast;
+                toast = Toast.makeText(this, movie.getTitle(), Toast.LENGTH_LONG);
+                toast.show();
+            }
+
+        }
+    }
+
+    private void loadMoviesData(String choice) {
+
+        new FetchMovieTask().execute(choice);
     }
 
     /*
@@ -197,15 +240,17 @@ public class MainActivity extends AppCompatActivity implements MovieAdapterOnCli
         //picasso.load(ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, videoId)).resize(px, px).centerCrop().into(imageview);
         Intent intent = new Intent(getApplicationContext(),MovieDetailActivity.class);
 
-        final Bundle bundle = new Bundle();
+        //final Bundle bundle = new Bundle();
         intent.putExtra("movie",movie);
 
-        startActivity(intent);
+     //   startActivityForResult(intent,MOVIE_DETAIL_VIEW);
+        startActivityForResult(intent,MOVIE_DETAIL_VIEW);
+       // startActivity(intent);
     }
 
 
 
-    public class FetchMovieTask extends AsyncTask<String, Void , List<Movie>> {
+     class FetchMovieTask extends   AsyncTask<String, Void , List<Movie>> {
 
 
         @Override
@@ -221,11 +266,9 @@ public class MainActivity extends AppCompatActivity implements MovieAdapterOnCli
                 String response = NetworkUtils
                         .getResponseFromHttpUrl(moviesDbRequestUrl);
 
-                List<Movie> simpleJsonMovieData = MovieJsonUtils
+
+                return MovieJsonUtils
                         .getSimpleMovieStringsFromJson(MainActivity.this, response);
-
-
-                return simpleJsonMovieData;
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -238,21 +281,10 @@ public class MainActivity extends AppCompatActivity implements MovieAdapterOnCli
         @Override
         protected void onPostExecute(List<Movie> movieData) {
 
-            mMoviePosterAdapter.setWeatherData(movieData ,sort);
+            mMoviePosterAdapter.setWeatherData(movieData);
         }
     }
 
-  /*  @Override
-    protected void onPause() {
-        super.onPause();
-
-        SharedPreferences.Editor prefrencesEditor = mPreferences.edit();
-        //most popular, top rated
-        prefrencesEditor.putInt(MOSTPOPULAR_KEY, mTopRated );
-        prefrencesEditor.putFloat(TOPRATED_KEY,mMostPopular);
-
-        prefrencesEditor.apply();
-    }*/
 
 
     public static class SettingsActivity extends PreferenceActivity {

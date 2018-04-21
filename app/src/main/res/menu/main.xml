@@ -7,4 +7,5 @@
        android:title="@string/settings"
         android:id="@+id/action_setting" />
 
+
 </menu>

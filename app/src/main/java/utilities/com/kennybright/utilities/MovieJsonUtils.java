@@ -2,9 +2,7 @@
 package com.kennybright.utilities;
 
 
-import android.content.ContentValues;
 import android.content.Context;
-import android.view.View;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -18,24 +16,14 @@ import com.kennybright.moviesapp.model.Movie;
 /**
  * Utility functions to handle OpenWeatherMap JSON data.
  */
+@SuppressWarnings("unused")
 public final class MovieJsonUtils {
 
 
     public static List<Movie> getSimpleMovieStringsFromJson(Context context, String movieJsonStr)
             throws JSONException {
 
-        /* Weather information. Each day's forecast info is an element of the "list" array */
-        final String OWM_LIST = "list";
 
-        /* All temperatures are children of the "temp" object */
-        final String OWM_TEMPERATURE = "temp";
-
-        /* Max temperature for the day */
-        final String OWM_MAX = "max";
-        final String OWM_MIN = "min";
-
-        final String OWM_WEATHER = "weather";
-        final String OWM_DESCRIPTION = "main";
 
         final String OWM_MESSAGE_CODE = "cod";
 
@@ -71,21 +59,9 @@ public final class MovieJsonUtils {
     }
 
 
-    public static String getMovieTrailerFromJson(Context context, String movieTrailerJsonStr)
+    public static List<String> getMovieTrailerFromJson(Context context, String movieTrailerJsonStr)
             throws JSONException {
 
-        /* Weather information. Each day's forecast info is an element of the "list" array */
-        final String OWM_LIST = "list";
-
-        /* All temperatures are children of the "temp" object */
-        final String OWM_TEMPERATURE = "temp";
-
-        /* Max temperature for the day */
-        final String OWM_MAX = "max";
-        final String OWM_MIN = "min";
-
-        final String OWM_WEATHER = "weather";
-        final String OWM_DESCRIPTION = "main";
 
         final String OWM_MESSAGE_CODE = "cod";
 
@@ -110,14 +86,15 @@ public final class MovieJsonUtils {
             }
         }
 
+        List<String> trailerList;
         JSONArray trailerResult = movieJson.getJSONArray("results");
-        JSONObject jsonObj = trailerResult.getJSONObject(0);
-        String trailerKey = jsonObj.getString("key");
+        //JSONObject jsonObj = trailerResult.getJSONObject(0);
+        //String trailerKey = jsonObj.getString("key");
 
         // parsedMovieData = new String[moviesArray.length()];
         // parsedMovieData = toStringArray(moviesArray);
-
-        return trailerKey;
+       trailerList = JsonTrailerArrayToList(trailerResult);
+        return trailerList;
 
     }
 
@@ -148,5 +125,29 @@ public final class MovieJsonUtils {
             }
         }
         return movieList;
+    }
+
+    private static List<String> JsonTrailerArrayToList(JSONArray trailerJsonArray) {
+        List<String> trailerList = new ArrayList<>();
+        String key;
+        if(trailerJsonArray==null)
+            return null;
+
+
+        for (int i=0; i< trailerJsonArray.length(); i++ )
+        {
+            try {
+                JSONObject obj=   (JSONObject)trailerJsonArray.get(i);
+
+              key =   obj.getString("key");
+
+                trailerList.add(key);
+
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return trailerList;
     }
 }

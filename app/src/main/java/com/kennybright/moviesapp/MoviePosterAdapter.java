@@ -10,11 +10,7 @@ import android.widget.ImageView;
 import android.view.View.OnClickListener;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.TreeMap;
 
 import com.kennybright.moviesapp.model.AverageRatingComparator;
 import com.kennybright.moviesapp.model.Movie;
@@ -24,8 +20,8 @@ import com.squareup.picasso.Picasso;
 
 public class MoviePosterAdapter  extends RecyclerView.Adapter<MoviePosterAdapter.ViewHolder> {
     //private String[] _movieData;
-    List<Movie>  _movies = new ArrayList<>();
-    Context  _context;
+    private List<Movie>  _movies = new ArrayList<>();
+    private final Context  _context;
     private final MovieAdapterOnClickHandler mClickHandler;
 
 
@@ -53,12 +49,11 @@ public class MoviePosterAdapter  extends RecyclerView.Adapter<MoviePosterAdapter
         // inflate the item layout
         View vw = LayoutInflater.from(parent.getContext()).inflate(R.layout.movies,parent,false);
         // set the view's size, margins, paddings, and layout parameters
-        ViewHolder vh = new ViewHolder(vw);
-        return  vh;
+        return new ViewHolder(vw);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull  MoviePosterAdapter.ViewHolder holder, final int position) {
+    public void onBindViewHolder(@NonNull final MoviePosterAdapter.ViewHolder holder, final int position) {
         try {
             String baseImageUri = "http://image.tmdb.org/t/p/w185/";
             String poster_path = _movies.get(position).getPoster_path();
@@ -73,8 +68,8 @@ public class MoviePosterAdapter  extends RecyclerView.Adapter<MoviePosterAdapter
         holder.imageView.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-              //  int pos = holder.getAdapterPosition();
-                Movie movie = _movies.get(position);
+                int pos = holder.getAdapterPosition();
+                Movie movie = _movies.get(pos);
                 if (mClickHandler != null)
                 mClickHandler.onClick(movie);
             }
@@ -93,8 +88,8 @@ public class MoviePosterAdapter  extends RecyclerView.Adapter<MoviePosterAdapter
 
 
     public class ViewHolder extends  RecyclerView.ViewHolder {
-        ImageView imageView;
-        public ViewHolder(View itemView) {
+        final ImageView imageView;
+        ViewHolder(View itemView) {
 
             super(itemView);
             // get reference to the item view (row)
@@ -110,12 +105,19 @@ public class MoviePosterAdapter  extends RecyclerView.Adapter<MoviePosterAdapter
      *
      * @param movieData movie data to be displayed.
      */
-    public void setWeatherData(List<Movie> movieData, boolean sort) {
+    public void setWeatherData(List<Movie> movieData) {
         _movies = movieData;
-       //_movies.sort(Comparator.comparingDouble(Movie::getVote_average));
-        if (sort) {
+
+        notifyDataSetChanged();
+    }
+
+    public void sortMoviePosters(String option)
+    {
+        //_movies.sort(Comparator.comparingDouble(Movie::getVote_average));
+        if (option.equals("top rated")) {
             _movies.sort(new AverageRatingComparator());
-        }else {
+        }
+        if(option.equals("most popular")) {
 
             _movies.sort(new PopularMovieComparator());
         }
